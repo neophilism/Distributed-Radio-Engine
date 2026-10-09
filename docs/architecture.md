@@ -1,5 +1,3 @@
-# Distributed-Radio-Engine
-
 # Four-project development plan
 
 120 planned work packages: 34 Distributed Audio Engine, 32 SceneSignal, 28 Distributed Radio Engine, 26 TrackZero. The original 88-package baseline remains mapped separately; 32 work packages were added. These are roadmap identifiers, not GitHub PR numbers.
@@ -13,5 +11,3 @@ No organizer event rules or radio-product reward rules belong in the audio core.
 A **Spime** is a Bluetooth-enabled physical instrument anchor in SceneSignal: its validated location controls a virtual source such as the strings section. Phone, speaker and Spime locations are separate.
 
 All projects adopt the pinned End To End Everywhere architecture as their default. TLS and server disk encryption supplement endpoint encryption; they never substitute for it. Production assurance, native-device and field qualification are evidence gates distinct from merging development code.
-
-Implementation begins after the preceding stage. [Development plan](docs/distributed-radio-engine-development-plan.md).
