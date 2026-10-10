@@ -5,3 +5,4 @@ export * from './catalog.mjs';
 export * from './rights.mjs';
 export * from './program.mjs';
 export * from './rotation.mjs';
+export * from './interstitial.mjs';
