@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {authorizeSponsorCampaign,accountCommonSponsorDelivery,ContractError} from '../src/index.mjs';
+const digest='sha256:'+'a'.repeat(64);
+const input=()=>({tenantId:'t',stationId:'s',campaignId:'c',audioRef:'ciphertext:ad',programDigest:digest,rateMinor:450});
+const program=()=>({stationId:'s',digest,timeline:[{role:'sponsor',ref:'ciphertext:ad',fromMs:10,toMs:30}]});
+test('requires broadcaster-approved common program ad',()=>{assert.throws(()=>authorizeSponsorCampaign(input()),ContractError);assert.equal(authorizeSponsorCampaign(input(),()=>true).campaignId,'c');});
+test('real shared sponsor cue produces delivery accounting, not claimed people',()=>{const c=authorizeSponsorCampaign(input(),()=>true);const row=accountCommonSponsorDelivery(c,program(),program().timeline[0],'delivery1',()=>true);assert.equal(row.listenerCount,null);assert.equal(row.radioPoints,0);assert.equal(row.deliveryUnits,1);});
+test('personalized or substituted ad cues cannot count as shared placement',()=>{const c=authorizeSponsorCampaign(input(),()=>true);assert.throws(()=>accountCommonSponsorDelivery(c,program(),{role:'sponsor',ref:'ciphertext:other',fromMs:10,toMs:30},'delivery1',()=>true),ContractError);});
+test('incomplete playback or unapproved schedule fails closed',()=>{const c=authorizeSponsorCampaign(input(),()=>true);assert.throws(()=>accountCommonSponsorDelivery(c,program(),program().timeline[0],'delivery1',()=>false),ContractError);assert.throws(()=>accountCommonSponsorDelivery(c,{...program(),digest:'sha256:'+'b'.repeat(64)},program().timeline[0],'delivery1',()=>true),ContractError);});
