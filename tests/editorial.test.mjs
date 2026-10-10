@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {compileEditorialRevision,approveEditorialRevision,ContractError} from '../src/index.mjs';
+const membership={tenantId:'t',applicationId:'app',stationId:'station',principalId:'alice',role:'owner',active:true};
+const rev=()=>compileEditorialRevision({...membership,version:1,program:[{kind:'media',ref:'song1'},{kind:'identification',ref:'outro1'}]});
+const approval=(revision)=>({digest:revision.digest,stationId:revision.stationId,version:revision.version,principalId:'alice'});
+test('exact program order determines revision digest',()=>{const a=rev();const b=compileEditorialRevision({...a,program:[...a.program].reverse()});assert.notEqual(a.digest,b.digest);});
+test('authorized, externally verified approvals bind the exact digest',()=>{let a=rev();assert.equal(approveEditorialRevision({revision:a,membership,approval:approval(a),verifySignature:()=>true}).digest,a.digest);});
+test('unsigned approvals fail closed',()=>{const a=rev();assert.throws(()=>approveEditorialRevision({revision:a,membership,approval:approval(a)}),ContractError);});
+test('sponsor insertion invalidates prior approval',()=>{const a=rev(),b=compileEditorialRevision({...a,program:[...a.program,{kind:'sponsor',ref:'campaign1'}]});assert.throws(()=>approveEditorialRevision({revision:b,membership,approval:approval(a),verifySignature:()=>true}),ContractError);});
+test('forged scope or unauthorized editor fails',()=>{const a=rev();assert.throws(()=>approveEditorialRevision({revision:a,membership:{...membership,role:'analyst'},approval:approval(a),verifySignature:()=>true}),ContractError);assert.throws(()=>approveEditorialRevision({revision:a,membership:{...membership,stationId:'other'},approval:approval(a),verifySignature:()=>true}),ContractError);});
