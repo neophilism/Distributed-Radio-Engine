@@ -1,0 +1,15 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createStation, createMediaItem, assertSameTenant, ContractError, mediaKinds} from '../src/index.mjs';
+const radio = createStation({id:'radio.1',tenantId:'label.1',publisherId:'creator.1',name:'Independent Radio'});
+const song = () => createMediaItem({id:'song.1',tenantId:'label.1',publisherId:'creator.1',title:'First Song',kind:'music',assetRef:'opaque:asset1',attribution:'Artist'});
+test('music client uses the neutral radio contract',()=>{assert.equal(radio.kind,'linear-radio');assert.equal(song().kind,'music');assertSameTenant(radio,song());});
+test('documentary client uses exactly the same contract',()=>{const doc=createMediaItem({id:'doc.1',tenantId:'label.1',publisherId:'publisher.2',title:'Report',kind:'documentary',assetRef:'ciphertext:2'});assert.equal(doc.kind,'documentary');assertSameTenant(radio,doc);});
+test('news, talk and episodes are valid',()=>{for(const kind of ['news','talk','episode'])assert(mediaKinds.includes(kind));});
+test('unknown or nonsensical content kinds are denied',()=>assert.throws(()=>createMediaItem({...song(),kind:'karaoke'}),ContractError));
+test('missing encrypted asset reference is rejected',()=>assert.throws(()=>createMediaItem({...song(),assetRef:''}),ContractError));
+test('tenant separation is enforced',()=>assert.throws(()=>assertSameTenant(radio,{...song(),tenantId:'other'}),ContractError));
+test('unknown station status is rejected',()=>assert.throws(()=>createStation({id:'x',tenantId:'t',publisherId:'p',name:'S',status:'live-ish'}),ContractError));
+test('records cannot silently be modified',()=>{assert(Object.isFrozen(radio));assert(Object.isFrozen(song()));});
+test('control characters, whitespace and prototype-bearing inputs are denied',()=>{assert.throws(()=>createStation({...radio,name:' bad'}),ContractError);assert.throws(()=>createMediaItem(Object.create(null)),ContractError);});
+test('no consumer on-demand or venue policy commands are exported',async()=>{const api=await import('../src/index.mjs'); for (const forbidden of ['playNextSong','setVenue','setPermit','claimSpeakerPoints'])assert.equal(forbidden in api,false);});
