@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {makeRightsRecord,requirePublishingRights,ContractError} from '../src/index.mjs';
+const r=()=>makeRightsRecord({tenantId:'tenant',assetRef:'ciphertext:track',uses:['broadcast','cache'],territories:['US'],validFrom:'2026-01-01T00:00:00Z',validUntil:'2027-01-01T00:00:00Z'});
+const request=()=>({tenantId:'tenant',assetRef:'ciphertext:track',use:'broadcast',territory:'US',at:Date.parse('2026-09-10T00:00:00Z')});
+test('granted broadcast works only inside configured window',()=>assert.equal(requirePublishingRights(r(),request()),true));
+test('missing reward and sales rights deny publication',()=>{for(const use of ['reward','sale'])assert.throws(()=>requirePublishingRights(r(),{...request(),use}),ContractError);});
+test('revocation blocks new deliveries',()=>assert.throws(()=>requirePublishingRights({...r(),revoked:true},request()),ContractError));
+test('wrong territory, tenant and asset are denied',()=>{for(const [key,val] of [['territory','CA'],['tenantId','other'],['assetRef','ciphertext:other']])assert.throws(()=>requirePublishingRights(r(),{...request(),[key]:val}),ContractError);});
+test('expiry and premature access fail closed',()=>{for(const at of [Date.parse('2025-12-31'),Date.parse('2027-01-01')])assert.throws(()=>requirePublishingRights(r(),{...request(),at}),ContractError);});
+test('duplicate and unknown grants are rejected',()=>{assert.throws(()=>makeRightsRecord({...r(),uses:['broadcast','broadcast']}),ContractError);assert.throws(()=>makeRightsRecord({...r(),uses:['unknown']}),ContractError);});
