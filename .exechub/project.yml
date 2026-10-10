@@ -1,0 +1,22 @@
+project:
+  name: Distributed-Radio-Engine
+  display_name: Distributed Radio Engine
+  repository: neophilism/Distributed-Radio-Engine
+  status: active-development
+
+roadmap:
+  version: 1
+  planned_prs: 28
+  approved: true
+
+milestones:
+  - name: Radio contracts identity catalog and rights
+    prs: 5
+  - name: Linear broadcasting and scheduling
+    prs: 6
+  - name: Verified output contributions and points
+    prs: 7
+  - name: Unlocked Grooves and listener progress
+    prs: 5
+  - name: Commerce security integration and release
+    prs: 5
