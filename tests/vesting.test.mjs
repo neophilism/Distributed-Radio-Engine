@@ -6,3 +6,10 @@ test('vest only after entire outro',()=>{const g=new VestingGate();assert.equal(
 test('late join does not earn cycle',()=>assert.equal(new VestingGate().vest({...sample,startedAtMs:101}).accepted,false));
 test('interruption or missing evidence forfeits',()=>{const g=new VestingGate();assert.equal(g.vest({...sample,interruptions:true}).accepted,false);assert.equal(g.vest({...sample,evidenceContinuous:false}).accepted,false)});
 test('idempotent duplicate cannot vest twice',()=>{const g=new VestingGate();assert.equal(g.vest(sample).accepted,true);assert.equal(g.vest(sample).reason,'already-vested')});
+
+test('invalid inverted or negative occurrence times fail before vest',()=>{
+ const g=new VestingGate();
+ assert.throws(()=>g.vest({...sample,startedAtMs:1001}),/interval/);
+ assert.throws(()=>g.vest({...sample,requiredStartMs:-1}),/interval/);
+ assert.equal(g.get(sample.stationId,sample.occurrenceId),null);
+});
