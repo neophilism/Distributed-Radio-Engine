@@ -25,3 +25,15 @@ test('reject invalid time, route and incomplete timeline',()=>{
   assert.throws(()=>createRadioJoin({...base,nowMs:10000,route:{clientType:'unknown',status:'ready'}}));
   assert.throws(()=>createRadioJoin({...base,nowMs:10000,program:{...program,timeline:[]}}));
 });
+test('join snapshots whitelist route/evidence metadata and reject invalid identities',()=>{
+  const join=createRadioJoin({...base,nowMs:11000,
+    route:{clientType:'web',status:'ready',privateKey:'not public'},
+    evidence:{status:'unverified',rawAmbientAudio:'not public'}});
+  assert.deepEqual(join.route,{clientType:'web',status:'ready'});
+  assert.deepEqual(join.evidence,{status:'unverified'});
+  for(const change of [{stationId:''},{digest:''},{version:0},
+    {timeline:[null]}, {timeline:[{ref:'',role:'content',fromMs:0,toMs:6000}]},
+    {timeline:[{ref:'segment',role:'unknown',fromMs:0,toMs:6000}]}])
+    assert.throws(()=>createRadioJoin({...base,nowMs:11000,program:{...program,...change}}));
+});
+
