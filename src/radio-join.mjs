@@ -8,11 +8,20 @@ export function createRadioJoin({program, startedAtMs, nowMs, route, evidence}) 
   if (!['web','native'].includes(route?.clientType)) throw new ContractError('Unsupported client route');
   if (!['ready','recovering','unavailable'].includes(route?.status)) throw new ContractError('Invalid route status');
   if (!['verified','unverified','unavailable'].includes(evidence?.status)) throw new ContractError('Invalid evidence state');
-  const atMs = (nowMs - startedAtMs) % program.durationMs;
+  const elapsed = nowMs - startedAtMs;
+  if (!Number.isSafeInteger(elapsed)) throw new ContractError('Station elapsed time exceeds safe integer range');
+  let cursor = 0;
+  for (const item of program.timeline) {
+    if (!Number.isSafeInteger(item.fromMs) || !Number.isSafeInteger(item.toMs) || item.fromMs !== cursor || item.toMs <= cursor || item.toMs > program.durationMs)
+      throw new ContractError('Station timeline has gap, overlap or invalid segment');
+    cursor = item.toMs;
+  }
+  if (cursor !== program.durationMs) throw new ContractError('Station timeline does not span duration');
+  const atMs = elapsed % program.durationMs;
   const segment = program.timeline.find(s => s.fromMs <= atMs && atMs < s.toMs);
   if (!segment) throw new ContractError('Incomplete station timeline');
   return Object.freeze({stationId:program.stationId, version:program.version, digest:program.digest,
-    atMs, cycle:Math.floor((nowMs-startedAtMs)/program.durationMs), segmentRef:segment.ref,
+    atMs, cycle:Math.floor(elapsed/program.durationMs), segmentRef:segment.ref,
     segmentRole:segment.role, segmentOffsetMs:atMs-segment.fromMs,
     seekable:false, onDemand:false, route:Object.freeze({...route}), evidence:Object.freeze({...evidence})});
 }

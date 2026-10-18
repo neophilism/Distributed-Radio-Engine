@@ -15,6 +15,11 @@ test('route and evidence truthfully preserve degraded state',()=>{
   const join=createRadioJoin({...base,nowMs:11000,route:{clientType:'native',status:'recovering'},evidence:{status:'unavailable'}});
   assert.equal(join.route.status,'recovering');assert.equal(join.evidence.status,'unavailable');
 });
+test('reject timeline overlaps and unsafe elapsed clock arithmetic',()=>{
+  const overlapping={...program,timeline:[{ref:'one',fromMs:0,toMs:2000},{ref:'two',fromMs:1000,toMs:6000}]};
+  assert.throws(()=>createRadioJoin({...base,nowMs:11000,program:overlapping}));
+  assert.throws(()=>createRadioJoin({...base,startedAtMs:-Number.MAX_SAFE_INTEGER,nowMs:Number.MAX_SAFE_INTEGER}));
+});
 test('reject invalid time, route and incomplete timeline',()=>{
   assert.throws(()=>createRadioJoin({...base,nowMs:9999}));
   assert.throws(()=>createRadioJoin({...base,nowMs:10000,route:{clientType:'unknown',status:'ready'}}));
