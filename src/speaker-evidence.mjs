@@ -1,4 +1,4 @@
-/** DRE-13: count only separately attested, deduplicated physical speaker outputs. */
+/** DRE-13: count only attested, distinct physical output IDs. */
 export function aggregateSpeakerEvidence(entries) {
   if (!Array.isArray(entries)) throw new TypeError('Evidence array required');
   const seen=new Set(); let microPoints=0n;
@@ -7,7 +7,8 @@ export function aggregateSpeakerEvidence(entries) {
        typeof entry.physicalOutputId!=='string' || !entry.physicalOutputId ||
        typeof entry.issuerId!=='string' || !entry.issuerId ||
        typeof entry.microPoints!=='bigint' || entry.microPoints<0n) continue;
-    const key=entry.issuerId+':'+entry.physicalOutputId;
+    // One physical speaker must not count twice even under different evidence issuers.
+    const key=entry.physicalOutputId;
     if(seen.has(key))continue;
     seen.add(key);microPoints+=entry.microPoints;
   }
