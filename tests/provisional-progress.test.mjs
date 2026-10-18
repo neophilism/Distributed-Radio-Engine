@@ -17,3 +17,10 @@ test('abandoned cycle wipes provisional state',()=>{
 const p=new ProvisionalProgress();p.addWindow({cycleId:'c',creatorId:'a',windowId:'w',points:7n,verified:true});
 assert.equal(p.abandon('c').provisionalPoints,0n);
 });
+
+test('conflicting replay cannot silently alter a verified window',()=>{
+ const p=new ProvisionalProgress(),a={cycleId:'cycle',creatorId:'artist',windowId:'first',points:100n,verified:true};
+ p.addWindow(a);
+ assert.throws(()=>p.addWindow({...a,points:900n}),/Conflicting replay/);
+ assert.equal(p.preview('cycle').provisionalPoints,100n);
+});

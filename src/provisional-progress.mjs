@@ -8,6 +8,7 @@ export class ProvisionalProgress {
     const current=this.#cycles.get(cycleId);
     if(current && current.creatorId!==creatorId)throw new Error('Cycle creator mismatch');
     const entry=current??{creatorId,windows:new Map()};
+    if(entry.windows.has(windowId) && entry.windows.get(windowId)!==points) throw new Error('Conflicting replay for verified window');
     if(!entry.windows.has(windowId))entry.windows.set(windowId,points);
     this.#cycles.set(cycleId,entry);
     return this.preview(cycleId);
