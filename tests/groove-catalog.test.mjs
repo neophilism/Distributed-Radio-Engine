@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,rmSync} from 'node:fs';
+import {mkdtempSync,rmSync,chmodSync,symlinkSync} from 'node:fs';
+import {DatabaseSync} from 'node:sqlite';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {GrooveCatalog} from '../src/groove-catalog.mjs';
@@ -87,5 +88,18 @@ test('withdrawal requires the same explicit creator authority as publication',t=
  const {catalog:c}=setup(t,operation=>operation.action==='publish');c.put(a);
  assert.throws(()=>c.remove('bonus'),/withdrawal authorization/);
  assert.equal(c.put(a).recordingId,'takeA');
+});
+test('authorization exceptions are sanitized rather than exposing provider credentials',t=>{
+ const {catalog:c}=setup(t,()=>{throw new Error('private-credential');});
+ assert.throws(()=>c.put(a),error=>error.message==='Creator catalog authorization denied');
+});
+test('nonprivate files symlink files and unsupported schemas fail closed',t=>{
+ const dir=mkdtempSync(join(tmpdir(),'groove-channel-'));t.after(()=>rmSync(dir,{recursive:true,force:true}));
+ const path=join(dir,'channels.sqlite');let registry=new RecordingChannelRegistry(path);registry.close();
+ chmodSync(path,0o644);assert.throws(()=>new RecordingChannelRegistry(path),/Private ordinary/);chmodSync(path,0o600);
+ const alias=join(dir,'alias.sqlite');symlinkSync(path,alias);
+ assert.throws(()=>new RecordingChannelRegistry(alias),/Private ordinary/);
+ const db=new DatabaseSync(path);db.exec('UPDATE radio_channel_schema SET version=2');db.close();
+ assert.throws(()=>new RecordingChannelRegistry(path),/Unsupported/);
 });
 

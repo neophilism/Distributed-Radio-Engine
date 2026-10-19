@@ -17,7 +17,9 @@ export class GrooveCatalog {
     if(original && (original.recordingId!==recordingId || original.creatorId!==creatorId))
       throw new Error('Cannot reassign existing groove identity');
     const item=Object.freeze({grooveId,recordingId,creatorId,channel:'groove',exclusive:true});
-    const result=this.#authorize(Object.freeze({action:'publish',...item}),this.#scope);
+    let result;
+    try {result=this.#authorize(Object.freeze({action:'publish',...item}),this.#scope);}
+    catch {throw new TypeError('Creator catalog authorization denied');}
     if(result&&typeof result.then==='function'){Promise.resolve(result).catch(()=>{});throw new TypeError('Synchronous creator authorization required');}
     if(result!==true)throw new TypeError('Creator catalog authorization denied');
     this.#registry.reserve({tenantId:this.#scope.tenantId,applicationId:this.#scope.applicationId,recordingId,creatorId,entryId:grooveId,channel:'groove'});
@@ -27,7 +29,9 @@ export class GrooveCatalog {
   remove(grooveId){
     const item=this.#items.get(grooveId);
     if(!item)return false;
-    const result=this.#authorize(Object.freeze({action:'withdraw',...item}),this.#scope);
+    let result;
+    try {result=this.#authorize(Object.freeze({action:'withdraw',...item}),this.#scope);}
+    catch {throw new TypeError('Creator withdrawal authorization denied');}
     if(result&&typeof result.then==='function'){Promise.resolve(result).catch(()=>{});throw new TypeError('Synchronous creator authorization required');}
     if(result!==true)throw new TypeError('Creator withdrawal authorization denied');
     return this.#items.delete(grooveId);
