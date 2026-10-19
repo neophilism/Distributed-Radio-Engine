@@ -31,11 +31,13 @@ catalog/withdrawal state, authorized issuer receipts, preserved grant reads and
 secure endpoint delivery remain implementation work. The permanent channel
 reservation is not an active-publication or entitlement record.
 
-Local `npm run check` passes65 tests and roadmap validation on Node24.19.0,
-including11 catalog tests. Actual SQLite tests cover persistence across restart,
+Local `npm run check` passes67 tests and roadmap validation on Node24.19.0,
+including13 catalog tests. Actual SQLite tests cover persistence across restart,
 two independent connections, paid/points/Groove collision, immutable identities,
 scope separation and rollback after a uniqueness violation. Authorization and
-fail-closed missing grant behavior are exercised. Current-head CI is separate.
+fail-closed missing grant behavior, sanitized authorization failures, symlink/
+nonprivate-file rejection and unsupported schema rejection are exercised.
+Current-head CI is separate.
 
 ## Resume this unit first
 
