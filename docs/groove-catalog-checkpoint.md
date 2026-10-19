@@ -1,0 +1,51 @@
+# DRE-19 implementation checkpoint — incomplete
+
+`RecordingChannelRegistry` supplies an actual local-endpoint SQLite constraint on
+tenant/application/recording identity. Groove, points and paid reservations share
+one primary key; creator/channel/entry identity cannot be reassigned, including
+after withdrawal. A separate unique constraint prevents an entry ID from being
+retargeted to another recording. Exact replay is idempotent. Transactions use
+BEGIN IMMEDIATE, WAL, FULL synchronous commits, bounded contention and a versioned
+schema. Private endpoint directories/ordinary files are required; new files use
+0600 permissions and memory stores require explicit test opt-in.
+
+Groove publication/withdrawal now requires exact synchronous creator-authorizer
+success on a frozen operation and tenant/application/principal scope. Publishing
+uses the shared reservation before updating its local view. Caller flags, async
+truthy returns and missing authority cannot publish. The callback must establish
+actual creator rights; fixture callbacks are not production authorization.
+
+The shared-channel constraint only covers writers using the **same authoritative
+database**. Points/paid catalog writer integration is not implemented here yet.
+Independent databases do not establish global exclusivity. This is a local
+endpoint persistence adapter, not a selected hosted service, at-rest encryption
+or E2EE certification. It stores opaque catalog/business metadata, never audio,
+keys or protected asset plaintext.
+
+The earlier client-ID-only in-memory `grant` API did not authenticate an issuer or
+persist entitlements. It now fails closed. Entitlement reads also report the
+missing durable adapter rather than falsely returning an empty entitlement list.
+No fixture-grant bypass is exposed. No real grant/entitlement data was migrated
+or modified. Existing catalog items remain an ephemeral view; durable active
+catalog/withdrawal state, authorized issuer receipts, preserved grant reads and
+secure endpoint delivery remain implementation work. The permanent channel
+reservation is not an active-publication or entitlement record.
+
+Local `npm run check` passes67 tests and roadmap validation on Node24.19.0,
+including13 catalog tests. Actual SQLite tests cover persistence across restart,
+two independent connections, paid/points/Groove collision, immutable identities,
+scope separation and rollback after a uniqueness violation. Authorization and
+fail-closed missing grant behavior, sanitized authorization failures, symlink/
+nonprivate-file rejection and unsupported schema rejection are exercised.
+Current-head CI is separate.
+
+## Resume this unit first
+
+Keep PR25 draft. Resume its actual boardroom/DRE-19 branch and inspect exact-head
+CI. Implement durable catalog active/revision state, authenticated rights/issuer
+contracts and append-only entitlements with same-decision replay/withdrawal
+preservation, then connect all points/paid writers to one authoritative channel
+registry. Integrate the approved DRE-05 rights checks and later DRE-23 secure
+grant/delivery path. Test concurrency, restart, unauthorized access, withdrawal
+and existing entitlement continuity. Do not label this unit complete, invent a
+live grant, restore the old client-ID grant API or merge this partial checkpoint.
