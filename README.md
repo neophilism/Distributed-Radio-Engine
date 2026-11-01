@@ -2,6 +2,10 @@
 
 **Development and handoff plan:** [docs/DEVELOPMENT_PLAN.md](docs/DEVELOPMENT_PLAN.md).
 
+**DRE-19 checkpoint:** [shared recording-channel registry and remaining work](docs/groove-catalog-checkpoint.md).
+Channel identities persist atomically; catalog/grant/delivery integration remains
+incomplete. Unimplemented grant APIs fail closed; this draft is not deployable.
+
 # Four-project development plan
 
 120 planned work packages: 34 Distributed Audio Engine, 32 SceneSignal, 28 Distributed Radio Engine, 26 TrackZero. The original 88-package baseline remains mapped separately; 32 work packages were added. These are roadmap identifiers, not GitHub PR numbers.
@@ -21,3 +25,4 @@ Implementation begins after the preceding stage. [Development plan](docs/distrib
 ## End-to-End Everywhere progress
 
 The canonical [security/e2eesa-status.json](security/e2eesa-status.json) records standard implementation, complete testing and independent expert review separately. Engine Room reads it automatically from GitHub. All initial stages are pending; existing profile locks and approved decisions remain authoritative. Read [adoption and independent-account instructions](docs/E2EESA_ADOPTION.md), and run `python3 scripts/validate_e2eesa_status.py`. Record validation does not establish product security or certification.
+
